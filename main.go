@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"log/slog"
@@ -15,6 +16,16 @@ func main() {
 		AddSource: true,
 		Level:     slog.LevelError,
 	})))
+
+	var yamlPath string
+	flag.StringVar(&yamlPath, "configpath", defaultYamlConfigPath, fmt.Sprintf("path to config yaml file, default: %s", defaultYamlConfigPath))
+	flag.Parse()
+
+	cfg, err := loadConfig(yamlPath)
+	if err != nil {
+		slog.Error("failed to load config", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
 
 	vmAPI := NewAPI()
 
@@ -31,7 +42,7 @@ func main() {
 
 	// serve
 	srv := http.Server{
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port),
 		Handler: mux,
 	}
 
