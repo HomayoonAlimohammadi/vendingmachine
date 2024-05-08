@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"vendingmachine/internal/storage"
 )
 
 func main() {
@@ -27,18 +29,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	vmAPI := NewAPI()
+	vmStorage := storage.NewInMemoryVMStorage()
+	smStorage := storage.NewInMemorySMStorage()
+
+	handler := NewHandler(vmStorage, smStorage)
 
 	// routes
 	mux := http.NewServeMux()
-	mux.HandleFunc("/addvm", vmAPI.AddVMHandler)
-	mux.HandleFunc("/insert", vmAPI.InsertCoinHandler)
-	mux.HandleFunc("/select", vmAPI.SelectProductHandler)
-	mux.HandleFunc("/abort", vmAPI.AbortOrderHandler)
+	mux.HandleFunc("/addvm", handler.AddVMHandler)
+	mux.HandleFunc("/insert", handler.InsertCoinHandler)
+	mux.HandleFunc("/select", handler.SelectProductHandler)
+	mux.HandleFunc("/abort", handler.AbortOrderHandler)
 
 	// statemachine routes
-	mux.HandleFunc("/sm/insert", vmAPI.TransitionHandler)
-	mux.HandleFunc("/sm/select", vmAPI.TransitionHandler)
+	mux.HandleFunc("/sm/insert", handler.TransitionHandler)
+	mux.HandleFunc("/sm/select", handler.TransitionHandler)
 
 	// serve
 	srv := http.Server{

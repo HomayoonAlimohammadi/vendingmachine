@@ -8,9 +8,14 @@ import (
 type State string
 
 const (
-	idle       State = "Idle"
-	selecting  State = "Selecting"
-	delivering State = "Delivering"
+	// Ready to insert coins
+	Idle State = "Idle"
+
+	// Ready to select product
+	Selecting State = "Selecting"
+
+	// Ready to deliver the selected producdt
+	Delivering State = "Delivering"
 )
 
 type VendingMachine struct {
@@ -35,10 +40,46 @@ type Item struct {
 	Price  int    `json:"price"`
 }
 
-func New(inventory []Item) (*VendingMachine, error) {
+// VMOption is used to initialize the VendingMachine instance with custom data
+// should be used for testing purposes only
+type VMOption interface {
+	apply(*VendingMachine)
+}
+
+type vmOption func(*VendingMachine)
+
+func (o vmOption) apply(vm *VendingMachine) {
+	o(vm)
+}
+
+func WithState(s State) VMOption {
+	return vmOption(func(vm *VendingMachine) {
+		vm.state = s
+	})
+}
+
+func WithInsertedAmount(a int) VMOption {
+	return vmOption(func(vm *VendingMachine) {
+		vm.insertedAmount = &a
+	})
+}
+
+func WithSelectedProd(p string) VMOption {
+	return vmOption(func(vm *VendingMachine) {
+		vm.selectedProd = &p
+	})
+}
+
+func WithProdMap(m map[string]*Item) VMOption {
+	return vmOption(func(vm *VendingMachine) {
+		vm.prodmap = m
+	})
+}
+
+func New(inventory []Item, opts ...VMOption) (*VendingMachine, error) {
 	vm := &VendingMachine{
 		mu:             &sync.Mutex{},
-		state:          idle,
+		state:          Idle,
 		insertedAmount: nil,
 		prodmap:        make(map[string]*Item),
 	}
@@ -48,6 +89,11 @@ func New(inventory []Item) (*VendingMachine, error) {
 		vm.prodmap[item.Name] = &item
 	}
 
+	// overwrite from the options
+	for _, o := range opts {
+		o.apply(vm)
+	}
+
 	return vm, nil
 }
 
@@ -55,11 +101,11 @@ func (vm *VendingMachine) InsertCoin(amount int) error {
 	vm.mu.Lock()
 	defer vm.mu.Unlock()
 
-	if vm.state != idle {
+	if vm.state != Idle {
 		return fmt.Errorf("%w: cannot insert coin in state: %q", ErrBadState, vm.state)
 	}
 
-	vm.state = selecting
+	vm.state = Selecting
 	vm.insertedAmount = &amount
 
 	return nil
@@ -69,7 +115,7 @@ func (vm *VendingMachine) SelectProduct(productStr string) error {
 	vm.mu.Lock()
 	defer vm.mu.Unlock()
 
-	if vm.state != selecting {
+	if vm.state != Selecting {
 		return fmt.Errorf("%w: cannot select product in state: %q", ErrBadState, vm.state)
 	}
 
@@ -91,7 +137,7 @@ func (vm *VendingMachine) SelectProduct(productStr string) error {
 		return fmt.Errorf("%w: product: %q, price: %d, inserted amount: %d", ErrInsufficientFunds, prod.Name, prod.Price, *vm.insertedAmount)
 	}
 
-	vm.state = delivering
+	vm.state = Delivering
 	vm.selectedProd = &productStr
 
 	return nil
@@ -101,7 +147,7 @@ func (vm *VendingMachine) DeliverProduct() error {
 	vm.mu.Lock()
 	defer vm.mu.Unlock()
 
-	if vm.state != delivering {
+	if vm.state != Delivering {
 		return fmt.Errorf("%w: cannot deliver product in state: %q", ErrBadState, vm.state)
 	}
 
@@ -127,7 +173,7 @@ func (vm *VendingMachine) DeliverProduct() error {
 	}
 
 	// reset
-	vm.state = idle
+	vm.state = Idle
 	// reduce the number of product in the inventory
 	prod.Number -= 1
 	*vm.insertedAmount -= prod.Price
@@ -140,7 +186,7 @@ func (vm *VendingMachine) AbortAndReset() {
 	vm.mu.Lock()
 	defer vm.mu.Unlock()
 
-	vm.state = idle
+	vm.state = Idle
 	vm.insertedAmount = nil
 	vm.selectedProd = nil
 }

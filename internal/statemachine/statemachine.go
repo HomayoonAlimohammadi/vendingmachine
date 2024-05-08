@@ -1,10 +1,8 @@
 package statemachine
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"sync"
 
 	"vendingmachine/internal/vendingmachine"
@@ -90,9 +88,9 @@ type idleState struct {
 }
 
 func (s *idleState) Enter() error {
-	slog.Info("entered idle state")
-	b, _ := json.MarshalIndent(s.m.data, "", "  ")
-	slog.Info(string(b))
+	// slog.Info("entered idle state")
+	// b, _ := json.MarshalIndent(s.m.data, "", "  ")
+	// slog.Info(string(b))
 	return nil
 }
 
@@ -116,9 +114,9 @@ type selectingState struct {
 }
 
 func (s *selectingState) Enter() error {
-	slog.Info("entered selecing state")
-	b, _ := json.MarshalIndent(s.m.data, "", "  ")
-	slog.Info(string(b))
+	// slog.Info("entered selecing state")
+	// b, _ := json.MarshalIndent(s.m.data, "", "  ")
+	// slog.Info(string(b))
 	return nil
 }
 
@@ -156,9 +154,9 @@ type deliveringState struct {
 }
 
 func (s *deliveringState) Enter() error {
-	slog.Info("entered delivering state")
-	b, _ := json.MarshalIndent(s.m.data, "", "  ")
-	slog.Info(string(b))
+	// slog.Info("entered delivering state")
+	// b, _ := json.MarshalIndent(s.m.data, "", "  ")
+	// slog.Info(string(b))
 	return nil
 }
 

@@ -23,14 +23,14 @@ func TestInsert(t *testing.T) {
 
 	amount := 50
 	assert.NoError(t, vm.InsertCoin(amount))
-	assert.Equal(t, vm.state, selecting)
+	assert.Equal(t, vm.state, Selecting)
 	assert.Equal(t, *vm.insertedAmount, amount)
 	assert.Nil(t, vm.selectedProd)
 
 	// check can not insert in states other than idle
-	vm.state = selecting
+	vm.state = Selecting
 	assert.ErrorIs(t, vm.InsertCoin(amount), ErrBadState)
-	vm.state = delivering
+	vm.state = Delivering
 	assert.ErrorIs(t, vm.InsertCoin(amount), ErrBadState)
 }
 
@@ -38,7 +38,7 @@ func TestSelectProduct(t *testing.T) {
 	amount := 50
 	vm := &VendingMachine{
 		mu:             &sync.Mutex{},
-		state:          selecting,
+		state:          Selecting,
 		insertedAmount: &amount,
 		selectedProd:   nil,
 		prodmap:        getDefaultProdMap(),
@@ -46,53 +46,53 @@ func TestSelectProduct(t *testing.T) {
 
 	prod := "coffee"
 	assert.NoError(t, vm.SelectProduct(prod))
-	assert.Equal(t, vm.state, delivering)
+	assert.Equal(t, vm.state, Delivering)
 	assert.Equal(t, vm.selectedProd, &prod)
 	assert.Equal(t, *vm.insertedAmount, amount, "inserted amount should stay the same after selecting")
 
 	vm = &VendingMachine{
 		mu:             &sync.Mutex{},
-		state:          selecting,
+		state:          Selecting,
 		insertedAmount: &amount,
 		selectedProd:   nil,
 		prodmap:        getDefaultProdMap(),
 	}
 	assert.ErrorIs(t, vm.SelectProduct("invalid-product"), ErrInvalidProduct)
-	assert.Equal(t, vm.state, selecting)
+	assert.Equal(t, vm.state, Selecting)
 	assert.Nil(t, vm.selectedProd)
 	assert.Equal(t, *vm.insertedAmount, amount)
 	assert.Equal(t, vm.prodmap, getDefaultProdMap())
 
 	vm = &VendingMachine{
 		mu:             &sync.Mutex{},
-		state:          selecting,
+		state:          Selecting,
 		insertedAmount: &amount,
 		selectedProd:   nil,
 		prodmap:        getDefaultProdMap(),
 	}
 	assert.ErrorIs(t, vm.SelectProduct("milk"), ErrOutOfStock)
-	assert.Equal(t, vm.state, selecting)
+	assert.Equal(t, vm.state, Selecting)
 	assert.Nil(t, vm.selectedProd)
 	assert.Equal(t, *vm.insertedAmount, amount)
 	assert.Equal(t, vm.prodmap, getDefaultProdMap())
 
 	vm = &VendingMachine{
 		mu:             &sync.Mutex{},
-		state:          selecting,
+		state:          Selecting,
 		insertedAmount: &amount,
 		selectedProd:   nil,
 		prodmap:        getDefaultProdMap(),
 	}
 	assert.ErrorIs(t, vm.SelectProduct("coke"), ErrInsufficientFunds)
-	assert.Equal(t, vm.state, selecting)
+	assert.Equal(t, vm.state, Selecting)
 	assert.Nil(t, vm.selectedProd)
 	assert.Equal(t, *vm.insertedAmount, amount)
 	assert.Equal(t, vm.prodmap, getDefaultProdMap())
 
 	// check can not select in states other than selecting
-	vm.state = idle
+	vm.state = Idle
 	assert.ErrorIs(t, vm.SelectProduct("prod"), ErrBadState)
-	vm.state = delivering
+	vm.state = Delivering
 	assert.ErrorIs(t, vm.SelectProduct("prod"), ErrBadState)
 }
 
@@ -101,22 +101,22 @@ func TestDeliverProduct(t *testing.T) {
 	prod := "coffee"
 	vm := &VendingMachine{
 		mu:             &sync.Mutex{},
-		state:          delivering,
+		state:          Delivering,
 		insertedAmount: &amount,
 		selectedProd:   &prod,
 		prodmap:        getDefaultProdMap(),
 	}
 
 	assert.NoError(t, vm.DeliverProduct())
-	assert.Equal(t, vm.state, idle)
+	assert.Equal(t, vm.state, Idle)
 	assert.Nil(t, vm.selectedProd)
 	assert.Equal(t, *vm.insertedAmount, 20)
 	assert.Equal(t, vm.prodmap["coffee"].Number, 1)
 
 	// check can not deliver in states other than delivering
-	vm.state = idle
+	vm.state = Idle
 	assert.ErrorIs(t, vm.DeliverProduct(), ErrBadState)
-	vm.state = selecting
+	vm.state = Selecting
 	assert.ErrorIs(t, vm.DeliverProduct(), ErrBadState)
 }
 
