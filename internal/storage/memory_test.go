@@ -8,31 +8,32 @@ import (
 	internalVM "vendingmachine/internal/vendingmachine"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInMemoryVMStorage(t *testing.T) {
 	s := storage.NewInMemoryVMStorage()
 	vm, err := internalVM.New(getDefaultItems())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, vm)
 	id, err := s.SaveVM(vm)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	fetchedVM, err := s.GetVM(id)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, fetchedVM)
 }
 
 func TestInMemorySMStorage(t *testing.T) {
 	s := storage.NewInMemorySMStorage()
 	sm, err := statemachine.New(getDefaultItems())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, sm)
 	id, err := s.SaveSM(sm)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	fetchedSM, err := s.GetSM(id)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, fetchedSM)
 }
 

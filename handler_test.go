@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"vendingmachine/internal/statemachine"
@@ -25,15 +26,15 @@ func TestAddVMHandler(t *testing.T) {
 		h := NewHandler(vmStorage, smStorage)
 
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest("POST", "/addvm",
-			strings.NewReader("{\"inventory\":[{\"name\":\"coke\",\"number\":1,\"price\":100},{\"name\":\"coffee\",\"number\":2,\"price\":50},{\"name\":\"milk\",\"number\":0,\"price\":80}]}"))
+		r := httptest.NewRequest(http.MethodPost, "/addvm",
+			strings.NewReader("{\"inventory\":[{\"name\":\"coke\",\"number\":1,\"price\":100},{\"name\":\"coffee\",\"number\":2,\"price\":50},{\"name\":\"milk\",\"number\":0,\"price\":80}]}")) //nolint: lll
 		h.AddVMHandler(w, r)
 		res := w.Result()
 		defer res.Body.Close()
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		data, err := io.ReadAll(res.Body)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		assert.Equal(t, "{\"machine_id\":\"123\",\"statemachine_id\":\"123\"}\n", string(data))
 	})
@@ -49,8 +50,8 @@ func TestAddVMHandler(t *testing.T) {
 		h := NewHandler(vmStorage, smStorage)
 
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest("POST", "/addvm",
-			strings.NewReader("{\"inventory\":[{\"name\":\"coke\",\"number\":1,\"price\":100},{\"name\":\"coffee\",\"number\":2,\"price\":50},{\"name\":\"milk\",\"number\":0,\"price\":80}]}"))
+		r := httptest.NewRequest(http.MethodPost, "/addvm",
+			strings.NewReader("{\"inventory\":[{\"name\":\"coke\",\"number\":1,\"price\":100},{\"name\":\"coffee\",\"number\":2,\"price\":50},{\"name\":\"milk\",\"number\":0,\"price\":80}]}")) //nolint: lll
 		h.AddVMHandler(w, r)
 		res := w.Result()
 		defer res.Body.Close()
@@ -66,7 +67,7 @@ func TestInsertCoinHandler(t *testing.T) {
 		h := NewHandler(vmStorage, nil)
 
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest("POST", "/insert",
+		r := httptest.NewRequest(http.MethodPost, "/insert",
 			strings.NewReader("{\"machine_id\":\"123\", \"inserted_amount\":100}"))
 		h.InsertCoinHandler(w, r)
 
@@ -79,7 +80,7 @@ func TestInsertCoinHandler(t *testing.T) {
 		h := NewHandler(vmStorage, nil)
 
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest("POST", "/insert",
+		r := httptest.NewRequest(http.MethodPost, "/insert",
 			strings.NewReader("{\"machine_id\":\"123\"}"))
 		h.InsertCoinHandler(w, r)
 
@@ -94,7 +95,7 @@ func TestInsertCoinHandler(t *testing.T) {
 		h := NewHandler(vmStorage, nil)
 
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest("POST", "/insert",
+		r := httptest.NewRequest(http.MethodPost, "/insert",
 			strings.NewReader("{\"machine_id\":\"123\", \"inserted_amount\":100}"))
 
 		h.InsertCoinHandler(w, r)
@@ -112,7 +113,7 @@ func TestInsertCoinHandler(t *testing.T) {
 		h := NewHandler(vmStorage, nil)
 
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest("POST", "/insert",
+		r := httptest.NewRequest(http.MethodPost, "/insert",
 			strings.NewReader("{\"machine_id\":\"123\", \"inserted_amount\":100}"))
 
 		h.InsertCoinHandler(w, r)
@@ -133,7 +134,7 @@ func TestSelectProductHandler(t *testing.T) {
 		h := NewHandler(vmStorage, nil)
 
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest("POST", "/select",
+		r := httptest.NewRequest(http.MethodPost, "/select",
 			strings.NewReader("{\"machine_id\":\"123\", \"selected_product\":\"coffee\"}"))
 		h.SelectProductHandler(w, r)
 
@@ -149,7 +150,7 @@ func TestSelectProductHandler(t *testing.T) {
 		h := NewHandler(vmStorage, nil)
 
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest("POST", "/select",
+		r := httptest.NewRequest(http.MethodPost, "/select",
 			strings.NewReader("{\"machine_id\":\"123\"}"))
 		h.SelectProductHandler(w, r)
 
@@ -165,7 +166,7 @@ func TestSelectProductHandler(t *testing.T) {
 		h := NewHandler(vmStorage, nil)
 
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest("POST", "/select",
+		r := httptest.NewRequest(http.MethodPost, "/select",
 			strings.NewReader("{\"machine_id\":\"123\", \"selected_product\":\"invalid\"}"))
 		h.SelectProductHandler(w, r)
 
@@ -180,7 +181,7 @@ func TestSelectProductHandler(t *testing.T) {
 		h := NewHandler(vmStorage, nil)
 
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest("POST", "/select",
+		r := httptest.NewRequest(http.MethodPost, "/select",
 			strings.NewReader("{\"machine_id\":\"123\", \"selected_product\":\"random\"}"))
 		h.SelectProductHandler(w, r)
 
@@ -195,7 +196,7 @@ func TestSelectProductHandler(t *testing.T) {
 		h := NewHandler(vmStorage, nil)
 
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest("POST", "/select",
+		r := httptest.NewRequest(http.MethodPost, "/select",
 			strings.NewReader("{\"machine_id\":\"123\", \"selected_product\":\"random\"}"))
 		h.SelectProductHandler(w, r)
 
@@ -224,7 +225,7 @@ func getVMStorageMock(t *testing.T) *mock_main.MockVMStorage {
 			Price:  80,
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	m.EXPECT().GetVM("123").AnyTimes().Return(vm, nil)
 
 	return m
@@ -250,7 +251,7 @@ func getSMStorageMock(t *testing.T) *mock_main.MockSMStorage {
 			Price:  80,
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	m.EXPECT().SaveSM(gomock.Any()).AnyTimes().Return("123", nil)
 	m.EXPECT().GetSM("123").AnyTimes().Return(sm, nil)
 
@@ -283,7 +284,7 @@ func getVMForSelect(t *testing.T) *internalVM.VendingMachine {
 			},
 		),
 	)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	return vm
 }

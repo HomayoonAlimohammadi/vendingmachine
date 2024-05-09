@@ -9,12 +9,12 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-var defaultYamlConfigPath = "./config.yaml"
-
 type Config struct {
 	Server struct {
-		Port string `yaml:"port" envconfig:"SERVER_PORT"`
-		Host string `yaml:"host" envconfig:"SERVER_HOST"`
+		Port                     string `yaml:"port" envconfig:"SERVER_PORT"`
+		Host                     string `yaml:"host" envconfig:"SERVER_HOST"`
+		ShutdownTimeoutSeconds   int    `yaml:"shutdown_timeout_seconds" envconfig:"SERVER_SHUTDOWN_TIMEOUT_SECONDS"`
+		ReadHeaderTimeoutSeconds int    `yaml:"read_header_timeout_seconds" envconfig:"SERVER_READ_HEADER_TIMEOUT_SECONDS"`
 	} `yaml:"server"`
 }
 

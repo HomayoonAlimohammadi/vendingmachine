@@ -1,2 +1,5 @@
 env/
 mocks/
+vendingmachine
+!vendingmachine/
+vendingmachine.drawio

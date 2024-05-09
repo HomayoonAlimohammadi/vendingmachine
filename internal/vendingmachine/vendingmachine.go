@@ -1,6 +1,7 @@
 package vendingmachine
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 )
@@ -8,13 +9,13 @@ import (
 type State string
 
 const (
-	// Ready to insert coins
+	// Ready to insert coins.
 	Idle State = "Idle"
 
-	// Ready to select product
+	// Ready to select product.
 	Selecting State = "Selecting"
 
-	// Ready to deliver the selected producdt
+	// Ready to deliver the selected product.
 	Delivering State = "Delivering"
 )
 
@@ -41,7 +42,7 @@ type Item struct {
 }
 
 // VMOption is used to initialize the VendingMachine instance with custom data
-// should be used for testing purposes only
+// should be used for testing purposes only.
 type VMOption interface {
 	apply(*VendingMachine)
 }
@@ -130,11 +131,12 @@ func (vm *VendingMachine) SelectProduct(productStr string) error {
 
 	// should not happen but check for it anyways
 	if vm.insertedAmount == nil {
-		return fmt.Errorf("no money was inserted")
+		return errors.New("no money was inserted")
 	}
 
 	if *vm.insertedAmount < prod.Price {
-		return fmt.Errorf("%w: product: %q, price: %d, inserted amount: %d", ErrInsufficientFunds, prod.Name, prod.Price, *vm.insertedAmount)
+		return fmt.Errorf("%w: product: %q, price: %d, inserted amount: %d", ErrInsufficientFunds,
+			prod.Name, prod.Price, *vm.insertedAmount)
 	}
 
 	vm.state = Delivering
@@ -153,29 +155,29 @@ func (vm *VendingMachine) DeliverProduct() error {
 
 	// should not happen but check for it anyways
 	if vm.selectedProd == nil {
-		return fmt.Errorf("no product was selected")
+		return errors.New("no product was selected")
 	}
 
 	// should not happen but check for it anyways
 	if vm.insertedAmount == nil {
-		return fmt.Errorf("no money was inserted")
+		return errors.New("no money was inserted")
 	}
 
 	prod := vm.prodmap[*vm.selectedProd]
 	// should not happen but check for it anyways
 	if prod == nil {
-		return fmt.Errorf("no product to deliver")
+		return errors.New("no product to deliver")
 	}
 
 	// should not happen but check for it anyways
 	if *vm.insertedAmount < prod.Price {
-		return fmt.Errorf("not enough money")
+		return errors.New("not enough money")
 	}
 
 	// reset
 	vm.state = Idle
 	// reduce the number of product in the inventory
-	prod.Number -= 1
+	prod.Number--
 	*vm.insertedAmount -= prod.Price
 	vm.selectedProd = nil
 

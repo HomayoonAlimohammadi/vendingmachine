@@ -6,32 +6,33 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInitializationIsSuccessful(t *testing.T) {
 	items := getDefaultItems()
 
 	vm, err := New(items)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.True(t, reflect.DeepEqual(vm.prodmap, getDefaultProdMap()))
 }
 
 func TestInsert(t *testing.T) {
 	vm, err := New(getDefaultItems())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	amount := 50
-	assert.NoError(t, vm.InsertCoin(amount))
-	assert.Equal(t, vm.state, Selecting)
-	assert.Equal(t, *vm.insertedAmount, amount)
+	require.NoError(t, vm.InsertCoin(amount))
+	assert.Equal(t, Selecting, vm.state)
+	assert.Equal(t, amount, *vm.insertedAmount)
 	assert.Nil(t, vm.selectedProd)
 
 	// check can not insert in states other than idle
 	vm.state = Selecting
-	assert.ErrorIs(t, vm.InsertCoin(amount), ErrBadState)
+	require.ErrorIs(t, vm.InsertCoin(amount), ErrBadState)
 	vm.state = Delivering
-	assert.ErrorIs(t, vm.InsertCoin(amount), ErrBadState)
+	require.ErrorIs(t, vm.InsertCoin(amount), ErrBadState)
 }
 
 func TestSelectProduct(t *testing.T) {
@@ -45,10 +46,10 @@ func TestSelectProduct(t *testing.T) {
 	}
 
 	prod := "coffee"
-	assert.NoError(t, vm.SelectProduct(prod))
-	assert.Equal(t, vm.state, Delivering)
-	assert.Equal(t, vm.selectedProd, &prod)
-	assert.Equal(t, *vm.insertedAmount, amount, "inserted amount should stay the same after selecting")
+	require.NoError(t, vm.SelectProduct(prod))
+	assert.Equal(t, Delivering, vm.state)
+	assert.Equal(t, prod, *vm.selectedProd)
+	assert.Equal(t, amount, *vm.insertedAmount, "inserted amount should stay the same after selecting")
 
 	vm = &VendingMachine{
 		mu:             &sync.Mutex{},
@@ -57,11 +58,11 @@ func TestSelectProduct(t *testing.T) {
 		selectedProd:   nil,
 		prodmap:        getDefaultProdMap(),
 	}
-	assert.ErrorIs(t, vm.SelectProduct("invalid-product"), ErrInvalidProduct)
-	assert.Equal(t, vm.state, Selecting)
+	require.ErrorIs(t, vm.SelectProduct("invalid-product"), ErrInvalidProduct)
+	assert.Equal(t, Selecting, vm.state)
 	assert.Nil(t, vm.selectedProd)
-	assert.Equal(t, *vm.insertedAmount, amount)
-	assert.Equal(t, vm.prodmap, getDefaultProdMap())
+	assert.Equal(t, amount, *vm.insertedAmount)
+	assert.Equal(t, getDefaultProdMap(), vm.prodmap)
 
 	vm = &VendingMachine{
 		mu:             &sync.Mutex{},
@@ -70,11 +71,11 @@ func TestSelectProduct(t *testing.T) {
 		selectedProd:   nil,
 		prodmap:        getDefaultProdMap(),
 	}
-	assert.ErrorIs(t, vm.SelectProduct("milk"), ErrOutOfStock)
-	assert.Equal(t, vm.state, Selecting)
+	require.ErrorIs(t, vm.SelectProduct("milk"), ErrOutOfStock)
+	assert.Equal(t, Selecting, vm.state)
 	assert.Nil(t, vm.selectedProd)
-	assert.Equal(t, *vm.insertedAmount, amount)
-	assert.Equal(t, vm.prodmap, getDefaultProdMap())
+	assert.Equal(t, amount, *vm.insertedAmount)
+	assert.Equal(t, getDefaultProdMap(), vm.prodmap)
 
 	vm = &VendingMachine{
 		mu:             &sync.Mutex{},
@@ -83,17 +84,17 @@ func TestSelectProduct(t *testing.T) {
 		selectedProd:   nil,
 		prodmap:        getDefaultProdMap(),
 	}
-	assert.ErrorIs(t, vm.SelectProduct("coke"), ErrInsufficientFunds)
-	assert.Equal(t, vm.state, Selecting)
+	require.ErrorIs(t, vm.SelectProduct("coke"), ErrInsufficientFunds)
+	assert.Equal(t, Selecting, vm.state)
 	assert.Nil(t, vm.selectedProd)
-	assert.Equal(t, *vm.insertedAmount, amount)
-	assert.Equal(t, vm.prodmap, getDefaultProdMap())
+	assert.Equal(t, amount, *vm.insertedAmount)
+	assert.Equal(t, getDefaultProdMap(), vm.prodmap)
 
 	// check can not select in states other than selecting
 	vm.state = Idle
-	assert.ErrorIs(t, vm.SelectProduct("prod"), ErrBadState)
+	require.ErrorIs(t, vm.SelectProduct("prod"), ErrBadState)
 	vm.state = Delivering
-	assert.ErrorIs(t, vm.SelectProduct("prod"), ErrBadState)
+	require.ErrorIs(t, vm.SelectProduct("prod"), ErrBadState)
 }
 
 func TestDeliverProduct(t *testing.T) {
@@ -107,17 +108,17 @@ func TestDeliverProduct(t *testing.T) {
 		prodmap:        getDefaultProdMap(),
 	}
 
-	assert.NoError(t, vm.DeliverProduct())
-	assert.Equal(t, vm.state, Idle)
+	require.NoError(t, vm.DeliverProduct())
+	assert.Equal(t, Idle, vm.state)
 	assert.Nil(t, vm.selectedProd)
-	assert.Equal(t, *vm.insertedAmount, 20)
-	assert.Equal(t, vm.prodmap["coffee"].Number, 1)
+	assert.Equal(t, 20, *vm.insertedAmount)
+	assert.Equal(t, 1, vm.prodmap["coffee"].Number)
 
 	// check can not deliver in states other than delivering
 	vm.state = Idle
-	assert.ErrorIs(t, vm.DeliverProduct(), ErrBadState)
+	require.ErrorIs(t, vm.DeliverProduct(), ErrBadState)
 	vm.state = Selecting
-	assert.ErrorIs(t, vm.DeliverProduct(), ErrBadState)
+	require.ErrorIs(t, vm.DeliverProduct(), ErrBadState)
 }
 
 func getDefaultItems() []Item {

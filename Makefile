@@ -28,3 +28,29 @@ lint: ${GOPATH}/bin/golangci-lint
 ${GOPATH}/bin/golangci-lint:	
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
 
+BUILD_IMAGE_NAME ?= "vendingmachine:1.0.0"
+
+.PHONY: build
+build:
+	go build -o vendingmachine .
+
+.PHONY: build-image
+build-image:
+	docker build ${BUILD_IMAGE_NAME} .
+
+.PHONY: push
+push-image:
+	docker push ${BUILD_IMAGE_NAME}
+
+.PHONY: run
+run: build
+	./vendingmachine
+
+# these should be changed according to the
+# config.yaml file
+CONTAINER_PORT := 8080
+HOST_PORT := 8080
+
+.PHONY:
+run-container: build
+	docker run -p 8080:8080 ${BUILD_IMAGE_NAME}

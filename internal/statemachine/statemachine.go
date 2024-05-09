@@ -135,7 +135,8 @@ func (s *selectingState) Transit(m *Machine, d Data) error {
 	}
 
 	if s.m.data.InsertedAmount == nil || *s.m.data.InsertedAmount < prop.Price {
-		return fmt.Errorf("%w: product: %q, price: %d, inserted amount: %d", ErrInsufficientFunds, *d.SelectedProd, prop.Price, *s.m.data.InsertedAmount)
+		return fmt.Errorf("%w: product: %q, price: %d, inserted amount: %d",
+			ErrInsufficientFunds, *d.SelectedProd, prop.Price, *s.m.data.InsertedAmount)
 	}
 
 	s.m.data.SelectedProd = d.SelectedProd
@@ -165,7 +166,7 @@ func (s *deliveringState) Transit(m *Machine, _ Data) error {
 		return errors.New("selected product not found")
 	}
 
-	s.m.data.selectedProdProb.Number -= 1
+	s.m.data.selectedProdProb.Number--
 
 	// reset state
 	s.m.data.InsertedAmount = nil

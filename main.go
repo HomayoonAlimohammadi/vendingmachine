@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -20,7 +21,9 @@ func main() {
 	})))
 
 	var yamlPath string
-	flag.StringVar(&yamlPath, "configpath", defaultYamlConfigPath, fmt.Sprintf("path to config yaml file, default: %s", defaultYamlConfigPath))
+	defaultYamlConfigPath := "./config.yaml"
+	flag.StringVar(&yamlPath, "configpath", defaultYamlConfigPath,
+		fmt.Sprintf("path to config yaml file, default: %s", defaultYamlConfigPath))
 	flag.Parse()
 
 	cfg, err := loadConfig(yamlPath)
@@ -47,16 +50,17 @@ func main() {
 
 	// serve
 	srv := http.Server{
-		Addr:    fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port),
-		Handler: mux,
+		Addr:              fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port),
+		Handler:           mux,
+		ReadHeaderTimeout: time.Duration(cfg.Server.ReadHeaderTimeoutSeconds) * time.Second,
 	}
 
 	serverCtx, cancel := context.WithCancelCause(context.Background())
 
 	go func() {
 		log.Printf("listening on %s\n", srv.Addr)
-		err := srv.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
+		err := srv.ListenAndServe() //nolint: govet // shadowing is not a problem here
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			fmt.Fprintf(os.Stderr, "error listening and serving: %v\n", err)
 		}
 
@@ -68,9 +72,10 @@ func main() {
 	// graceful shutdown
 	go func() {
 		<-serverCtx.Done()
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(),
+			time.Duration(cfg.Server.ShutdownTimeoutSeconds)*time.Second)
 		defer cancel()
-		if err := srv.Shutdown(shutdownCtx); err != nil {
+		if err := srv.Shutdown(shutdownCtx); err != nil { //nolint: govet // shadowing is not a problem here
 			fmt.Fprintf(os.Stderr, "error shutting down http server: %v\n", err)
 		}
 
