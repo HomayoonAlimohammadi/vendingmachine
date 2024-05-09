@@ -1,9 +1,16 @@
+GOPATH ?= $(shell go env GOPATH)
+MOCKGEN_VERSION := v0.4.0
+GOLANGCI_LINT_VERSION := v1.58.0
+BUILD_IMAGE_NAME ?= "vendingmachine:1.0.0"
+# these should be changed according to the
+# config.yaml file
+CONTAINER_PORT := 8080
+HOST_PORT := 8080
+
 .PHONY: genmocks
 genmocks: ${GOPATH}/bin/mockgen
 	mockgen -source=handler.go -destination=./mocks/handler.go -typed=true
 
-GOPATH ?= $(shell go env GOPATH)
-MOCKGEN_VERSION := v0.4.0
 ${GOPATH}/bin/mockgen:
 	go install go.uber.org/mock/mockgen@${MOCKGEN_VERSION}
 	
@@ -19,16 +26,12 @@ deps: ${GOPATH}/bin/mockgen
 test: deps genmocks
 	go test -v -race ./...
 
-GOLANGCI_LINT_VERSION := v1.58.0
-
 .PHONY: lint
 lint: ${GOPATH}/bin/golangci-lint deps genmocks
 	golangci-lint run --max-same-issues=999 --max-issues-per-linter=999 --config=./.golangci-lint.yaml
 	
 ${GOPATH}/bin/golangci-lint:	
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
-
-BUILD_IMAGE_NAME ?= "vendingmachine:1.0.0"
 
 .PHONY: build
 build:
@@ -45,11 +48,6 @@ push-image:
 .PHONY: run
 run: build
 	./vendingmachine
-
-# these should be changed according to the
-# config.yaml file
-CONTAINER_PORT := 8080
-HOST_PORT := 8080
 
 .PHONY:
 run-container: build
