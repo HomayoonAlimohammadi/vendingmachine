@@ -22,7 +22,7 @@ test: deps genmocks
 GOLANGCI_LINT_VERSION := v1.58.0
 
 .PHONY: lint
-lint: ${GOPATH}/bin/golangci-lint
+lint: ${GOPATH}/bin/golangci-lint deps genmocks
 	golangci-lint run --max-same-issues=999 --max-issues-per-linter=999 --config=./.golangci-lint.yaml
 	
 ${GOPATH}/bin/golangci-lint:	
