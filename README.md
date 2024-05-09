@@ -1,4 +1,8 @@
-# Introduction
+# Centralized Vending Machine Controller
+![Build Status](https://github.com/HomayoonAlimohammadi/vendingmachine/actions/workflows/go.yml/badge.svg)
+
+
+## Introduction
 This repo mimics the behaviour of a centrallized vending machine controller. Each vending machine can be in one of the three states below:
 1. **Idle**
     - Initial state of each vending machine. Accepts coin insertions in this state. Returns to this states after the product is successfuly delivered or the operation is aborted.
@@ -9,7 +13,7 @@ This repo mimics the behaviour of a centrallized vending machine controller. Eac
 
 ![States Diagram](./vendingmachine.jpg)
 
-# Local Development
+## Local Development
 To clean and/or generate mocks:
 ```bash
 make cleanmocks
@@ -33,6 +37,5 @@ make run-container
 ```
 - Make sure to change the `config.yaml` according to your pereferences .
 
-# TODO
+## TODO
 - Implement a WAL mechanism to prevent data loss/corruption
-- Add GitHub Actions
